@@ -18,10 +18,18 @@ Statement:
 This tool is only intended for technical research and authorized offensive and defensive projects. Users are required to comply with the Cybersecurity Law  and must not use it for any illegal activities. If the tool is used for other purposes, the user shall bear all legal responsibilities and joint liabilities. The author and the publisher shall not bear any legal responsibilities and joint liabilities!
 
 
+Payload:
+  
+  Generate a shellcode by using msfvenom --platform windows -p windows/meterpreter/reverse_tcp, and then write a PE file to call this shellcode.
+
+  
+The test results on April 7th
 
 !![main_shellcode扫描结果](https://github.com/user-attachments/assets/655f2f13-d46e-4761-9763-a49604bc3de4)
 
 !![main_shellcode动态执行](https://github.com/user-attachments/assets/da487d70-65fb-4552-8681-95bd993a2c74)
+
+The test results on April 10th
 
 !![vt](https://github.com/user-attachments/assets/b2ab5fe1-f72d-4430-b37d-6c6eb83145c5)
 
