@@ -1,0 +1,378 @@
+package crypto
+
+
+
+var nb uint8=4
+var Key = []byte("ABCDEFGHIJKLMNOP")
+type AseCBC struct{
+	Plaintext 	[]byte
+	Key			[]byte
+
+}
+
+type AseECB struct{
+	  //明文块，16字节一个块（status的一行，在内存中不连续，roundkey的一行是连续的）
+	
+	RoundKey	[]uint32   //轮密钥,向量[(nr+1)]，按字节展开宽度就是4（4字节内存中连续），
+							// 每nk一组更新，所谓roundkey的一行就是一个32位数，
+	 //密文块，16字节一个块
+	nr      uint8   //轮数
+	nk		uint8   //多少个4字节数，和模式有关
+	Rcon    [11]uint8
+	Sbox0   [256]uint8
+	RSbox0  [256]uint8
+}
+func NewAseECB()*AseECB{
+	a:=&AseECB{
+		Sbox0:[256]uint8{0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
+		0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
+		0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15,
+		0x04, 0xC7, 0x23, 0xC3, 0x18, 0x96, 0x05, 0x9A, 0x07, 0x12, 0x80, 0xE2, 0xEB, 0x27, 0xB2, 0x75,
+		0x09, 0x83, 0x2C, 0x1A, 0x1B, 0x6E, 0x5A, 0xA0, 0x52, 0x3B, 0xD6, 0xB3, 0x29, 0xE3, 0x2F, 0x84,
+		0x53, 0xD1, 0x00, 0xED, 0x20, 0xFC, 0xB1, 0x5B, 0x6A, 0xCB, 0xBE, 0x39, 0x4A, 0x4C, 0x58, 0xCF,
+		0xD0, 0xEF, 0xAA, 0xFB, 0x43, 0x4D, 0x33, 0x85, 0x45, 0xF9, 0x02, 0x7F, 0x50, 0x3C, 0x9F, 0xA8,
+		0x51, 0xA3, 0x40, 0x8F, 0x92, 0x9D, 0x38, 0xF5, 0xBC, 0xB6, 0xDA, 0x21, 0x10, 0xFF, 0xF3, 0xD2,
+		0xCD, 0x0C, 0x13, 0xEC, 0x5F, 0x97, 0x44, 0x17, 0xC4, 0xA7, 0x7E, 0x3D, 0x64, 0x5D, 0x19, 0x73,
+		0x60, 0x81, 0x4F, 0xDC, 0x22, 0x2A, 0x90, 0x88, 0x46, 0xEE, 0xB8, 0x14, 0xDE, 0x5E, 0x0B, 0xDB,
+		0xE0, 0x32, 0x3A, 0x0A, 0x49, 0x06, 0x24, 0x5C, 0xC2, 0xD3, 0xAC, 0x62, 0x91, 0x95, 0xE4, 0x79,
+		0xE7, 0xC8, 0x37, 0x6D, 0x8D, 0xD5, 0x4E, 0xA9, 0x6C, 0x56, 0xF4, 0xEA, 0x65, 0x7A, 0xAE, 0x08,
+		0xBA, 0x78, 0x25, 0x2E, 0x1C, 0xA6, 0xB4, 0xC6, 0xE8, 0xDD, 0x74, 0x1F, 0x4B, 0xBD, 0x8B, 0x8A,
+		0x70, 0x3E, 0xB5, 0x66, 0x48, 0x03, 0xF6, 0x0E, 0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E,
+		0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
+		0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16,
+	},
+	
+		Rcon:[11]uint8{0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36 },
+	
+		RSbox0:[256]uint8{0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+			0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+			0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+			0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+			0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+			0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+			0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+			0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
+			0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+			0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+			0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+			0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+			0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
+			0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+			0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+			0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d }}
+		return a
+}
+
+func (a *AseECB) byteArrayToUint32Array(stream []byte)[]uint32{
+	n:=len(stream)
+	nn:=n/int(nb)
+	blocks:=make([]uint32,n/int(nb));
+	
+	for i:=0;i<nn;i++{
+		blocks[i]=uint32(stream[i*4+0])<<24 | uint32(stream[i*4+1])<<16 | uint32(stream[i*4+2])<<8 |uint32(stream[i*4+3])
+	}
+	return blocks
+}
+func (a *AseECB) uint32TobyteArray(block []uint32)[]byte{
+	n:=len(block)*4
+	stream:=make([]byte,n);
+	
+	for i:=0;i<len(block);i++{
+		stream[i*4]=byte(block[i]>>24)
+		stream[i*4+1]=byte(block[i]>>16&0xff)
+		stream[i*4+2]=byte(block[i]>>8 & 0xff)
+		stream[i*4+3]=byte(block[i]& 0xff)
+	}
+	return stream
+}
+func (a *AseECB) pkcs5Padding(plaintext []byte)[]byte{
+	fine:=len(plaintext)%16
+
+	var blockNum =(len(plaintext)+16)/16
+
+	blocks:=make([]byte,blockNum*16)
+	fill:=16-fine
+	copy(blocks,plaintext)
+	for i:=0;i<fill;i++{
+		blocks[len(plaintext)+i]=byte(fill);
+	}
+	return blocks
+}
+
+
+func (a *AseECB) Encrypt(plaintext,key []byte, mode uint32)[]byte{
+	if(mode/8!=uint32(len(key))){
+		panic("")
+		
+	}
+	if(mode==128){
+		a.nr=10
+		a.nk=4
+
+	}else if(mode==192){
+		a.nr=12;
+		a.nk=6;
+	}else if(mode==256){
+		a.nr=14;
+		a.nk=8
+	}
+	padedPlainText:=a.pkcs5Padding(plaintext)
+	keys:=a.byteArrayToUint32Array(key)
+	blocks:=a.byteArrayToUint32Array(padedPlainText)
+	encrypted:=make([]byte,len(padedPlainText))
+	a.InitRoundKey(keys)
+	total:=len(blocks)/4
+	for i:=0;i<total;i++{
+		start:=i*4
+		end:=start+4
+		cur:=blocks[start:end]
+		a.AddRoundKey(cur,0)
+		var j uint8=1
+		for ;j<a.nr+1;j++{
+			a.BlockSub(cur)
+			a.BlockRowShift(cur)
+			if(j!=a.nr){
+				a.MixColumns(cur)
+			}
+			a.AddRoundKey(cur,uint32(j))
+		}
+		roundEncrypted:=a.uint32TobyteArray(cur)
+		copy(encrypted[i*16:i*16+16],roundEncrypted[:])
+	}
+	return encrypted
+}
+func (a *AseECB)g(endofwindows ,index uint32 )uint32{
+	endofwindows=a.RowSub(a.RowShift(endofwindows,8))
+	return (endofwindows>>24^uint32(a.Rcon[index]))<<24 | (endofwindows & 0xffffff);
+}
+
+func (a *AseECB)InitRoundKey(key []uint32){
+	
+	totalRoundKey :=(a.nr+1)*4
+	a.RoundKey=make([]uint32,totalRoundKey);
+	
+	//RoundKey 每NK个为一组，更新,第一组是输入key
+	var i uint8=0
+	for ;i<a.nk;i++{
+		a.RoundKey[i]=key[i];
+	}
+	for ;i<totalRoundKey;i++{
+		
+		
+			beginOfWindows:=a.RoundKey[i-a.nk];
+			endOfWindows:=a.RoundKey[i-1];
+			if  i%a.nk==0{
+				//i为当前Roundkey索引，
+					// 若i是nk的倍数，则RoundKey[i]=RoundKey[i-Nk]^g(RoundKey[i-1])
+					//否则RoundKey[i]=Round[i-NK]^RoundKey[i-1]
+					//g为
+					
+					endOfWindows=a.g(endOfWindows,(uint32)(i/a.nk));
+					
+			}
+			if a.nr==14 && i%a.nk==4{
+				endOfWindows=a.RowSub(endOfWindows);
+			}
+			a.RoundKey[i]=beginOfWindows^endOfWindows
+		
+	}
+}
+
+func (a *AseECB) AddRoundKey(blocks []uint32,round uint32){
+	var begin uint32=round*4;
+	var i uint32 =0;
+	for ;i<4;i++{
+		blocks[i]=((blocks[i]>>24)^a.RoundKey[begin+i]>>24)<<24 | ((blocks[i]>>16& 0xff)^(a.RoundKey[begin+i]>>16 & 0xff))<<16 |((blocks[i]>>8 & 0xff)^a.RoundKey[begin+i]>>8 & 0xff)<<8|((blocks[i]& 0xff)^(a.RoundKey[begin+i]& 0xff))
+	}
+}
+
+func (a *AseECB) RowShift(row,dis uint32)uint32{
+	return row<<dis|row>>(32-dis);
+}
+//row[0]>>24<<24| row[1]>>24<<16 | block[2]>>24<<8 | block[3]>>24
+//row[0] <<8>>24 <<24 | block[1]<<8>>24<<16
+//block[0]<<16>>24<<24
+//block[0]<<24>>24<<24 | block[1]<<24>>24<<16
+
+func (a *AseECB)BlockRowShift(blocks []uint32){
+	rows:=make([]uint32,4)
+	for i:=0;i<4;i++{
+		rows[i]=blocks[0]<<(i*8)>>24<<24| blocks[1]<<(i*8)>>24<<16 | blocks[2]<<(i*8)>>24<<8 |blocks[3]<<(i*8)>>24 
+	}
+	for i:=0;i<4;i++{
+		rows[i]=a.RowShift(rows[i],(uint32)(i*8))
+	}
+	for i:=0;i<4;i++{
+		blocks[i]=rows[0]<<(i*8)>>24<<24| rows[1]<<(i*8)>>24<<16 | rows[2]<<(i*8)>>24<<8 |rows[3]<<(i*8)>>24 
+	}
+}
+
+func (a *AseECB)BlockSub(blocks []uint32){
+	for i:=0;i<4;i++{
+		blocks[i]=a.RowSub(blocks[i])
+	}
+
+}
+
+
+func (a *AseECB) RowSub(w uint32 )uint32{
+	return uint32(a.Sbox0[w>>24])<<24 |
+		uint32(a.Sbox0[w>>16&0xff])<<16 |
+		uint32(a.Sbox0[w>>8&0xff])<<8 |
+		uint32(a.Sbox0[w&0xff])
+}
+
+
+
+func xtime( x uint8)uint8{
+  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+}
+
+// MixColumns function mixes the columns of the state matrix
+func(a *AseECB) MixColumns(blocks []uint32){
+ var Tmp,Tm,t,n1,n2,n3,n4 uint8;
+  
+  for i:=0; i < 4; i++{  
+	n1=(uint8)(blocks[i]>>24)
+    n2=(uint8)(blocks[i]>>16 & 0xff)
+	n3=(uint8)(blocks[i]>>8 & 0xff)
+	n4=(uint8)(blocks[i]& 0xff)
+	t=n1
+    Tmp = n1 ^ n2 ^ n3 ^ n4 ;
+    Tm  = n1 ^ n2 ;
+	Tm = xtime(Tm);  
+	n1 =n1^( Tm ^ Tmp) ;
+
+    Tm  = n2 ^ n3 ;
+	 Tm = xtime(Tm);  
+	 n2= n2^(Tm ^ Tmp );
+
+    Tm  = n3 ^ n4 ; 
+	Tm = xtime(Tm);  
+	n3 = n3^(Tm ^ Tmp );
+
+    Tm  = n4^ t ;        
+	Tm = xtime(Tm);  
+	n4=n4^( Tm ^ Tmp) ;
+	blocks[i]=uint32(n1)<<24| uint32(n2)<<16| uint32(n3)<<8|uint32(n4);
+  }
+}
+
+
+
+func(a *AseECB)Decrypt(encrypted,key []byte,mode uint32)[]byte{
+	if(mode/8!=uint32(len(key))){
+		panic("")
+		
+	}
+	if(a.nk==0 || a.nr==0){
+		if(mode==128){
+			a.nr=10
+			a.nk=4
+	
+		}else if(mode==192){
+			a.nr=12;
+			a.nk=6;
+		}else if(mode==256){
+			a.nr=14;
+			a.nk=8
+		}
+	}
+	
+	blocks:=a.byteArrayToUint32Array(encrypted)
+	if(len(a.RoundKey)==0){
+		keys:=a.byteArrayToUint32Array(key)
+		a.InitRoundKey(keys)
+	}
+	
+	
+	plaintext:=make([]byte,len(blocks)*4)
+	
+	total:=len(blocks)/4
+	for i:=0;i<total;i++{
+		start:=i*4
+		end:=start+4
+		cur:=blocks[start:end]
+		a.AddRoundKey(cur,uint32(a.nr))
+		var j int=int(a.nr-1)
+		for ;j>=0;j--{
+			
+			a.InvBlockRowShift(cur)
+			a.InvBlockSub(cur)
+			a.AddRoundKey(cur,uint32(j))
+			if(j!=0){
+				a.InvMixColumns(cur)
+			}
+		}
+		
+		roundEncrypted:=a.uint32TobyteArray(cur)
+		copy(plaintext[i*16:i*16+16],roundEncrypted[:])
+		
+	}
+	
+	n:=len(plaintext)-int(plaintext[len(plaintext)-1])
+	return plaintext[:n]
+		
+	
+	
+}
+
+func  Multiply( x, y uint8)uint8{
+  return (((y & 1) * x) ^
+       ((y>>1 & 1) * xtime(x)) ^
+       ((y>>2 & 1) * xtime(xtime(x))) ^
+       ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^
+       ((y>>4 & 1) * xtime(xtime(xtime(xtime(x)))))); 
+
+}
+
+func (a *AseECB)InvMixColumns(blocks []uint32){
+  
+  var i,n1,n2,n3,n4,t1,t2,t3,t4 uint8=0,0,0,0,0,0,0,0,0
+  for ; i < 4; i++{ 
+    n1=(uint8)(blocks[i]>>24)
+    n2=(uint8)(blocks[i]>>16 & 0xff)
+	n3=(uint8)(blocks[i]>>8 & 0xff)
+	n4=(uint8)(blocks[i]& 0xff)
+
+    t1 = Multiply(n1, 0x0e) ^ Multiply(n2, 0x0b) ^ Multiply(n3, 0x0d) ^ Multiply(n4, 0x09);
+    t2 = Multiply(n1, 0x09) ^ Multiply(n2, 0x0e) ^ Multiply(n3, 0x0b) ^ Multiply(n4, 0x0d);
+    t3 = Multiply(n1, 0x0d) ^ Multiply(n2, 0x09) ^ Multiply(n3, 0x0e) ^ Multiply(n4, 0x0b);
+    t4 = Multiply(n1, 0x0b) ^ Multiply(n2, 0x0d) ^ Multiply(n3, 0x09) ^ Multiply(n4, 0x0e);
+	blocks[i]=uint32(t1)<<24| uint32(t2)<<16| uint32(t3)<<8|uint32(t4);
+  }
+}
+
+func (a *AseECB) InvRowShift(row,dis uint32)uint32{
+	return row<<(32-dis)|row>>dis;
+}
+
+func (a *AseECB)InvBlockRowShift(blocks []uint32){
+	rows:=make([]uint32,4)
+	for i:=0;i<4;i++{
+		rows[i]=blocks[0]<<(i*8)>>24<<24| blocks[1]<<(i*8)>>24<<16 | blocks[2]<<(i*8)>>24<<8 |blocks[3]<<(i*8)>>24 
+	}
+	for i:=0;i<4;i++{
+		rows[i]=a.InvRowShift(rows[i],(uint32)(i*8))
+	}
+	for i:=0;i<4;i++{
+		blocks[i]=rows[0]<<(i*8)>>24<<24| rows[1]<<(i*8)>>24<<16 | rows[2]<<(i*8)>>24<<8 |rows[3]<<(i*8)>>24 
+	}
+}
+
+func (a *AseECB) InvRowSub(w uint32 )uint32{
+	return uint32(a.RSbox0[w>>24])<<24 |
+		uint32(a.RSbox0[w>>16&0xff])<<16 |
+		uint32(a.RSbox0[w>>8&0xff])<<8 |
+		uint32(a.RSbox0[w&0xff])
+}
+func (a *AseECB)InvBlockSub(blocks []uint32){
+	for i:=0;i<4;i++{
+		blocks[i]=a.InvRowSub(blocks[i])
+	}
+
+}
+
+
+
+
