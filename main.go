@@ -2,21 +2,12 @@ package main
 
 import (
 	"t1/payload"
+	"t1/crypto"
 	"os"
 	"io"
 	"strings"
-	//"time"
-	//"log"
 	"encoding/json"
-	//"t1/crypto"
 	"strconv"
-	//"t1/shellcode"
-)
-import(
-	"log"
-	"t1/crypto"
-	"encoding/hex"
-	"time"
 )
 func byteArrayToString(input []byte)string{
 	var res string
@@ -132,31 +123,7 @@ func ReadPayloadAndWriteToLoader(payloadFileName string,mode string,entryFuncNam
 
 
 
-func CrypTest(r []string){
-	a:=crypto.NewAseECB()
-	key := []byte("ABCDEFGHIJKLMNOP") // 加密的密钥
-	var res string
-	for _,item:=range r{
-		origData := []byte(item)
-			
-		encrypted :=a.Encrypt(origData,key,128)
-		encryText:=hex.EncodeToString(encrypted)
-		log.Println("密文(hex)：", encryText)
-		// 	log.Println("密文(base64)：", base64.StdEncoding.EncodeToString(encrypted))
-		
-		decrypted := a.Decrypt(encrypted,key,128)
-		log.Println("解密结果：", string(decrypted))
-		res=""
-		for i:=0;i<len(encryText);i+=2{
-			res+="0x"
-			res+=encryText[i:i+2]
-			res+=","
-		}
-		
-		log.Println("二进制数组：", res[:len(res)-1])
-	}
-	time.Sleep(555*time.Second)
-}
+
 
 
 func main() {
