@@ -12,7 +12,7 @@ GoByPassAV
       otherwise, leave it blank. After running, a loader.go file will be generated in the payload directory.
     
     2.Call the Gen1 function in loader.go from main.go. 
-         After executing go build -ldflags " -H=windowsgui" main.go, you can generate an anti - detection program.
+         Then  executing go env -w GOARCH=386 go build -ldflags " -H=windowsgui" main.go, you can generate an anti - detection program.
 
 Statement:
 
